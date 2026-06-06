@@ -1,4 +1,3 @@
-# app.py
 import streamlit as st
 import subprocess
 import os
@@ -35,7 +34,7 @@ run_pair = st.sidebar.checkbox("进行 VH/VL 配对", value=True)
 run_tree = st.sidebar.checkbox("构建进化树", value=True)
 
 # ======================
-# 【新增】侧边栏使用说明（含命名格式）
+# 侧边栏使用说明
 # ======================
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 📖 使用说明")
@@ -76,7 +75,6 @@ uploaded_file = st.file_uploader(
     type=["fasta", "fa", "fastq", "fq"]
 )
 
-# 【新增】文件上传后的即时提示
 if uploaded_file is not None:
     st.info(f"✅ 已接收文件：{uploaded_file.name}。请确保文件名包含孔位信息（如 96A01），否则配对功能将失效。")
 else:
@@ -140,7 +138,7 @@ if uploaded_file is not None:
                             file_name=excel_path.name,
                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                         )
-                    
+
                     # 预览前 5 行
                     try:
                         df = pd.read_excel(excel_path, sheet_name=0)
