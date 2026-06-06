@@ -115,31 +115,47 @@ def step0_install():
     os.makedirs(WORK_DIR, exist_ok=True)
     os.makedirs(DB_DIR, exist_ok=True)
 
-    # 3. IgBLAST
-    print("\n[4/6] 安装 IgBLAST 1.22.0...")
-    if not os.path.exists(f'{IGBLAST_DIR}/bin/igblastn'):
-        if os.path.exists(LOCAL_IGBLAST_TAR):
-            subprocess.run(f'tar -xzf {LOCAL_IGBLAST_TAR} -C {WORK_DIR}/', shell=True, check=True)
-            subprocess.run(f'chmod +x {IGBLAST_DIR}/bin/igblastn', shell=True)
-            print("  ✓ IgBLAST 安装完成")
-        else:
-            print(f"  ❌ 找不到本地文件: {LOCAL_IGBLAST_TAR}")
-            print("     请确认文件已上传到 /home/liuyunping/antibody/")
-            return False
+    # 3. 验证 IgBLAST
+    print("\n[4/6] 验证 IgBLAST 1.22.0...")
+    igblast_path = f'{IGBLAST_DIR}/bin/igblastn'
+    if os.path.exists(igblast_path):
+        # 如果存在，检查版本（可选，但更严谨）
+        try:
+            result = subprocess.run([igblast_path, '-version'], capture_output=True, text=True, timeout=5)
+            version_line = result.stdout.strip().split('\n')[0]
+            print(f"  ✅ IgBLAST 就绪: {version_line}")
+        except subprocess.TimeoutExpired:
+            print(f"  ⚠️  IgBLAST 存在，但版本检查超时")
+        except Exception as e:
+            print(f"  ⚠️  IgBLAST 存在，但运行异常: {e}")
     else:
-        print("  ✓ IgBLAST 已存在")
+        # 如果不存在，说明云端自动安装脚本 `setup.sh` 未成功运行
+        print(f"  ❌ 核心工具 IgBLAST 未找到: {igblast_path}")
+        print("     此错误通常意味着云端部署的初始化脚本 `setup.sh` 执行失败。")
+        print("     请前往 Streamlit Cloud 的「Manage app」->「Logs」页面，查看部署日志以排查问题。")
+        print("     常见原因：网络问题导致下载失败，或服务器权限不足。")
+        return False
 
-    # 4. 鼠源数据库
-    print("\n[5/6] 安装鼠源 IMGT 数据库...")
-    if not os.path.exists(f'{DB_DIR}/mouse_gl_V.nhr'):
-        if os.path.exists(LOCAL_MOUSE_DB_TAR):
-            subprocess.run(f'tar -xf {LOCAL_MOUSE_DB_TAR} -C {DB_DIR}/', shell=True, check=True)
-            print("  ✓ 数据库安装完成")
+    # 4. 验证鼠源数据库
+    print("\n[5/6] 验证鼠源 BLAST 数据库...")
+    # 检查核心的V基因数据库文件是否存在（作为数据库就绪的标志）
+    db_v_path = f'{DB_DIR}/mouse_gl_V.nhr'
+    if os.path.exists(db_v_path):
+        # 可选：简单检查文件大小，确保不是空文件
+        file_size = os.path.getsize(db_v_path)
+        if file_size > 1024:  # 假设大于1KB为有效文件
+            print(f"  ✅ 数据库就绪: {db_v_path} ({file_size//1024} KB)")
         else:
-            print(f"  ❌ 找不到本地文件: {LOCAL_MOUSE_DB_TAR}")
+            print(f"  ⚠️  数据库文件异常，可能不完整: {db_v_path}")
             return False
     else:
-        print("  ✓ 数据库已存在")
+        # 如果不存在，说明云端自动安装脚本 `setup.sh` 中的数据库构建步骤失败
+        print(f"  ❌ 核心数据库文件未找到: {db_v_path}")
+        print("     此错误通常意味着云端部署的初始化脚本 `setup.sh` 执行失败。")
+        print("     请前往 Streamlit Cloud 的「Manage app」->「Logs」页面，查看部署日志。")
+        print("     重点关注 `setup.sh` 中下载 IMGT FASTA 文件及运行 `makeblastdb` 建库命令的输出。")
+        print("     常见原因：网络问题导致 IMGT 官网文件下载失败，或服务器磁盘空间不足。")
+        return False)
 
     # 验证
     print("\n[6/6] 验证...")
