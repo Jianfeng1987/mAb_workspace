@@ -155,7 +155,7 @@ def step0_install():
         print("     请前往 Streamlit Cloud 的「Manage app」->「Logs」页面，查看部署日志。")
         print("     重点关注 `setup.sh` 中下载 IMGT FASTA 文件及运行 `makeblastdb` 建库命令的输出。")
         print("     常见原因：网络问题导致 IMGT 官网文件下载失败，或服务器磁盘空间不足。")
-        return False)
+        return False
 
     # 验证
     print("\n[6/6] 验证...")
